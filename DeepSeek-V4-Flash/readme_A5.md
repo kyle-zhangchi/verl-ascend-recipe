@@ -25,7 +25,7 @@
 
 ```bash
 
-conda create -n verl-npu python=3.11 -y
+conda create -n verl-npu python=3.12 -y
 conda activate verl-npu
 
 # 获取环境依赖
@@ -44,6 +44,75 @@ ln -s ../MindSpeed/mindspeed mindspeed
 ln -s ../MindSpeed-LLM/mindspeed_llm mindspeed_llm
 ln -s ../Megatron-LM/megatron megatron
 ln -s ../mbridge/mbridge mbridge
+```
+
+#### 镜像安装说明
+
+如使用镜像安装上述环境，在安装完之后请执行以下内容
+
+首先根据实际cann的安装路径source cann
+
+```bash
+
+CANN_INSTALL_PATH=${CANN_INSTALL_PATH:-"/usr/local/Ascend"}
+source ${CANN_INSTALL_PATH}/cann/set_env.sh
+
+```
+
+然后执行如下安装内容
+
+```bash
+
+ARCH=$(uname -m)
+echo "Install memfabric_hybrid based on architecture..."
+MEMFABRIC_VERSION=1.3.0
+MEMFABRIC_DATE=20260921.3
+MEMCACHE_VERSION=1.3.0
+MEMCACHE_DATE=20260921.3
+if [ "$ARCH" = "x86_64" ]; then
+    MEMFABRIC_URL="https://obs-memfabric-hybrid.obs.cn-north-4.myhuaweicloud.com/mf/master/${MEMFABRIC_DATE}/memfabric_hybrid-${MEMFABRIC_VERSION}-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+else
+    MEMFABRIC_URL="https://obs-memfabric-hybrid.obs.cn-north-4.myhuaweicloud.com/mf/master/${MEMFABRIC_DATE}/memfabric_hybrid-${MEMFABRIC_VERSION}-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl"
+fi
+python3 -m pip install "$MEMFABRIC_URL" --force-reinstall --no-deps  --trusted-host obs-memfabric-hybrid.obs.cn-north-4.myhuaweicloud.com
+
+# ---- full mode ----
+# ---- memcache_hybrid ----
+echo "Install memcache_hybrid based on architecture..."
+if [ "$ARCH" = "x86_64" ]; then
+    MEMCACHE_URL="https://obs-memfabric-hybrid.obs.cn-north-4.myhuaweicloud.com/memcache/master/${MEMCACHE_DATE}/memcache_hybrid-${MEMCACHE_VERSION}-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+else
+    MEMCACHE_URL="https://obs-memfabric-hybrid.obs.cn-north-4.myhuaweicloud.com/memcache/master/${MEMCACHE_DATE}/memcache_hybrid-${MEMCACHE_VERSION}-cp312-cp312-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl"
+fi
+python3 -m pip install "$MEMCACHE_URL" --force-reinstall --no-deps  --trusted-host obs-memfabric-hybrid.obs.cn-north-4.myhuaweicloud.com
+
+
+# ---- mfcli kernel install ----
+# Install the memfabric kernel for the target SoC. Only A5 and A3 require it;
+echo "Install memfabric kernel for A5..."
+mfcli kernel install --soc-version A5
+
+```
+
+预期将看到如下内容
+
+```bash
+
+Install memfabric kernel for A5...
+Detected supported CANN version: 9.2.0
+Installed: /usr/local/Ascend/cann-9.2.0/opp/vendors/cust/op_impl/aicpu/hybm/kernel/cann-hybm-compat.tar.gz
+Installed: /usr/local/Ascend/cann-9.2.0/opp/vendors/cust/op_impl/aicpu/hybm/config/libcann_hybm_kernel.json
+Installed: /usr/local/Ascend/cann-9.2.0/opp/vendors/cust/op_impl/aicpu/hybm/config/cann_hybm_kernel_version
+Updated: /usr/local/Ascend/cann-9.2.0/conf/ascend_package_load.ini
+Removed legacy: /usr/local/Ascend/cann-9.2.0/opp/vendors/cust/op_impl/aicpu/kernel/cann-hybm-compat.tar.gz
+Removed legacy: /usr/local/Ascend/cann-9.2.0/opp/vendors/cust/op_impl/aicpu/config/libcann_hybm_kernel.json
+Removed legacy: /usr/local/Ascend/cann-9.2.0/opp/vendors/cust/op_impl/aicpu/config/cann_hybm_kernel_version
+
+MemFabric Hybrid AccOffload:
+  Start installing, this may take minutes...
+  Install done. Path:
+    /usr/local/lib/python3.12/site-packages/memfabric_hybrid/lib/libmf_hybm_accoffload.so
+
 ```
 
 ### 权重下载与反量化
